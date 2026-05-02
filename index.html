@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stopwatch</title>
+  <style>
+    :root {
+      --bg: #1e1e2e;
+      --panel: #2a2a3d;
+      --text: #f4f4f5;
+      --muted: #b7b7c8;
+      --start: #22c55e;
+      --pause: #facc15;
+      --reset: #ef4444;
+      --lap: #3b82f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at top, #2f2f48 0%, var(--bg) 45%);
+      color: var(--text);
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      padding: 20px;
+    }
+
+    .stopwatch {
+      width: min(680px, 100%);
+      background: rgba(42, 42, 61, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(4px);
+    }
+
+    .title {
+      font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+      color: var(--muted);
+      text-align: center;
+      margin-bottom: 18px;
+      letter-spacing: 0.04em;
+    }
+
+    .display {
+      text-align: center;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(2rem, 9vw, 4.4rem);
+      letter-spacing: 0.05em;
+      padding: 12px 8px 20px;
+      margin-bottom: 10px;
+      text-shadow: 0 0 25px rgba(255, 255, 255, 0.08);
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: clamp(0.9rem, 2.5vw, 1rem);
+      font-weight: 700;
+      color: #101014;
+      cursor: pointer;
+      transition: transform 0.16s ease, filter 0.2s ease, opacity 0.2s ease;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.28);
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:hover:not(:disabled) {
+      filter: brightness(1.08);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    .start { background: var(--start); }
+    .pause { background: var(--pause); }
+    .reset { background: var(--reset); color: #fff; }
+    .lap { background: var(--lap); color: #fff; }
+
+    .laps-panel {
+      background: rgba(20, 20, 31, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .laps-title {
+      color: var(--muted);
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+      letter-spacing: 0.03em;
+    }
+
+    .laps {
+      list-style: none;
+      max-height: 220px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .laps li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      font-variant-numeric: tabular-nums;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .laps li span:first-child {
+      color: #d8d8e3;
+      font-weight: 600;
+    }
+
+    .laps li span:last-child {
+      color: #f8f8ff;
+      font-weight: 700;
+    }
+
+    .laps::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .laps::-webkit-scrollbar-thumb {
+      background: #4b4b66;
+      border-radius: 10px;
+    }
+
+    .empty {
+      color: #9090a7;
+      font-size: 0.92rem;
+      padding: 6px 2px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 640px) {
+      .stopwatch {
+        padding: 18px;
+        border-radius: 14px;
+      }
+
+      .controls {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .laps {
+        max-height: 190px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="stopwatch" aria-label="Stopwatch Application">
+    <h1 class="title">Stopwatch</h1>
+    <div id="display" class="display" aria-live="polite">00:00:00:000</div>
+
+    <section class="controls" aria-label="Stopwatch Controls">
+      <button id="startBtn" class="start" type="button">Start</button>
+      <button id="pauseBtn" class="pause" type="button" disabled>Pause</button>
+      <button id="resetBtn" class="reset" type="button">Reset</button>
+      <button id="lapBtn" class="lap" type="button" disabled>Lap</button>
+    </section>
+
+    <section class="laps-panel" aria-label="Lap Times">
+      <h2 class="laps-title">Lap Times</h2>
+      <p id="emptyState" class="empty">No laps recorded yet.</p>
+      <ul id="lapsList" class="laps"></ul>
+    </section>
+  </main>
+
+  <script>
+    // Stopwatch state variables
+    let startTime = 0;
+    let elapsedTime = 0;
+    let timerInterval = null;
+    let lapCount = 0;
+
+    // DOM references
+    const display = document.getElementById("display");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const lapBtn = document.getElementById("lapBtn");
+    const lapsList = document.getElementById("lapsList");
+    const emptyState = document.getElementById("emptyState");
+
+    // Helper to format numeric values with leading zeros
+    function pad(value, digits) {
+      return String(value).padStart(digits, "0");
+    }
+
+    // Converts elapsed milliseconds into HH:MM:SS:ms
+    function formatTime(ms) {
+      const hours = Math.floor(ms / 3600000);
+      const minutes = Math.floor((ms % 3600000) / 60000);
+      const seconds = Math.floor((ms % 60000) / 1000);
+      const milliseconds = ms % 1000;
+
+      return `${pad(hours, 2)}:${pad(minutes, 2)}:${pad(seconds, 2)}:${pad(milliseconds, 3)}`;
+    }
+
+    // Updates timer text display
+    function updateDisplay() {
+      display.textContent = formatTime(elapsedTime);
+    }
+
+    // Starts the stopwatch and updates button states
+    function startTimer() {
+      if (timerInterval) return;
+
+      startTime = Date.now() - elapsedTime;
+      timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - startTime;
+        updateDisplay();
+      }, 1);
+
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      lapBtn.disabled = false;
+    }
+
+    // Pauses stopwatch without resetting elapsed time
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      lapBtn.disabled = true;
+    }
+
+    // Clears stopwatch and lap list
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      startTime = 0;
+      elapsedTime = 0;
+      lapCount = 0;
+
+      updateDisplay();
+      lapsList.innerHTML = "";
+      emptyState.style.display = "block";
+
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      lapBtn.disabled = true;
+    }
+
+    // Adds a new lap entry to the lap list
+    function recordLap() {
+      if (!timerInterval) return;
+
+      lapCount += 1;
+      const lapItem = document.createElement("li");
+      lapItem.innerHTML = `<span>Lap ${lapCount}</span><span>${formatTime(elapsedTime)}</span>`;
+
+      emptyState.style.display = "none";
+      lapsList.prepend(lapItem);
+    }
+
+    // Event listeners for user controls
+    startBtn.addEventListener("click", startTimer);
+    pauseBtn.addEventListener("click", pauseTimer);
+    resetBtn.addEventListener("click", resetTimer);
+    lapBtn.addEventListener("click", recordLap);
+  </script>
+</body>
+</html>
